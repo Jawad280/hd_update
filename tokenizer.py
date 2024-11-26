@@ -1,6 +1,6 @@
 from typing import List
 from pythainlp.tokenize import word_tokenize
-from azure_storage import upload_file_to_azure, get_file_from_azure
+from azure_storage import upload_file_to_azure
 import pandas as pd
 import json
 import logging
