@@ -9,7 +9,12 @@ load_dotenv()
 
 router = APIRouter()
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO, 
+    handlers=[
+        logging.StreamHandler()  # Ensures logs are sent to stdout/stderr
+    ]
+)
 logger = logging.getLogger('main.py')
 
 @router.get("/")

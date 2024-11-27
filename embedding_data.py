@@ -8,7 +8,12 @@ import io
 from azure_storage import upload_file_to_azure, get_file_from_azure
 from tokenizer import batch_tokenize_docs
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO, 
+    handlers=[
+        logging.StreamHandler()  # Ensures logs are sent to stdout/stderr
+    ]
+)
 logger = logging.getLogger('embedding_data.py')
 
 load_dotenv()

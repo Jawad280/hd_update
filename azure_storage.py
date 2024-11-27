@@ -11,7 +11,12 @@ CONNECTION_STRING = os.getenv('CONNECTION_STRING')
 CONTAINER_NAME = os.getenv('CONTAINER_NAME')
 blob_service_client = BlobServiceClient.from_connection_string(conn_str=CONNECTION_STRING)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO, 
+    handlers=[
+        logging.StreamHandler()  # Ensures logs are sent to stdout/stderr
+    ]
+)
 logger = logging.getLogger('azure_storage.py')
 
 

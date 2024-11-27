@@ -4,6 +4,12 @@ import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 from environs import Env
 
+logging.basicConfig(
+    level=logging.INFO, 
+    handlers=[
+        logging.StreamHandler()  # Ensures logs are sent to stdout/stderr
+    ]
+)
 logger = logging.getLogger("hdbot")
 
 def create_app():

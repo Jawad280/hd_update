@@ -6,7 +6,12 @@ import json
 import logging
 from dotenv import load_dotenv
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO, 
+    handlers=[
+        logging.StreamHandler()  # Ensures logs are sent to stdout/stderr
+    ]
+)
 logger = logging.getLogger('tokenizer.py')
 
 load_dotenv()
