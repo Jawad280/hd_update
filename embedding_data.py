@@ -38,7 +38,8 @@ async def create_package_embeddings():
 
     logger.info("Beginning embedding process")
     knowledge_base = pd.read_csv(packages)
-    knowledge_base = knowledge_base[:2]
+    # For testing just take 2 rows 
+    # knowledge_base = knowledge_base[:2]
 
     logger.info("Generating json docs")
     batch_tokenize_docs(df=knowledge_base)

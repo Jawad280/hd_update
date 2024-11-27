@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import logging
 import io
+import time
 
 load_dotenv()
 
@@ -19,12 +20,16 @@ def upload_file_to_azure(f, filename:str):
         raise ValueError("CONNECTION_STRING or CONTAINER_NAME is not set in the environment variables.")
 
     try:
+        start_time = time.time()
         container_client = blob_service_client.get_container_client(CONTAINER_NAME)
         blob_client = container_client.get_blob_client(filename)
         
         blob_client.upload_blob(f, overwrite=True)
 
-        logger.info(f"File {filename} uploaded successfully !")
+        end_time = time.time()
+
+        time_taken = end_time - start_time
+        logger.info(f"File {filename} uploaded successfully in {time_taken:.2f} seconds !")
     except Exception as e:
         logger.error(f"Error has occured : {e}")
         raise e
@@ -34,13 +39,17 @@ def get_file_from_azure(filename: str):
         raise ValueError("CONNECTION_STRING or CONTAINER_NAME is not set in the environment variables.")
     
     try:
+        start_time = time.time()
         container_client = blob_service_client.get_container_client(CONTAINER_NAME)
         blob_client = container_client.get_blob_client(filename)
 
         blob_data = blob_client.download_blob()
         byte_steam = io.BytesIO(blob_data.readall())
 
-        logger.info(f"File {filename} retrieved successfully")
+        end_time = time.time()
+
+        time_taken = end_time - start_time
+        logger.info(f"File {filename} retrieved successfully in {time_taken:.2f} seconds")
         return byte_steam
     except Exception as e:
         logger.error(f"Error has occured : {e}")

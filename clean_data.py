@@ -166,6 +166,10 @@ async def create_packages(files):
 
     csv_content = df.to_csv(index=False)
     logger.info("Converted df to CSV format")
+
+    # Insert payment methods
+    # Insert cash discounts
+
     upload_file_to_azure(f=csv_content, filename="packages.csv")
     return "Uploaded packages.csv"
     
