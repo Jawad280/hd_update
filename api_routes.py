@@ -1,8 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
+from tasks import process_embeddings
+from celery.result import AsyncResult
+from celery_app import celery_app
 from clean_data import create_packages
-from embedding_data import create_package_embeddings
 import logging
 
 load_dotenv()
@@ -21,16 +23,24 @@ logger = logging.getLogger('main.py')
 async def hello():
     return "Hey Jawad"
 
+@router.get("/status/{task_id}")
+async def get_status(task_id: str):
+    task_result = AsyncResult(task_id, app=celery_app)
+    return {"task_id": task_id, "status": task_result.status, "result": task_result.result}
+
 @router.post("/upload")
 async def upload_xlsx(files: list[UploadFile] = File(...)):
     try:
-        # First merge xlsx, clean data & upload to blob
+        # Step 1 : Process xlsx & upload to Azure
+        logger.info("Cleaning up xlsx")
         packages = await create_packages(files=files)
-        embedding_res = await create_package_embeddings()
+
+        # Step 2 : Start the embedding in background
+        task = process_embeddings.apply_async()
         
         return JSONResponse(
             status_code=200,
-            content={"message": embedding_res}
+            content={"message": f"{packages} & Embedding is running in the background for task_id : {task.id}"}
         )
         
     except Exception as e:

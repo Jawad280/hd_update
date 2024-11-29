@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import logging
 import io
+import asyncio
 from azure_storage import upload_file_to_azure, get_file_from_azure
 from tokenizer import batch_tokenize_docs
 
@@ -29,16 +30,15 @@ client = AsyncAzureOpenAI(
     azure_endpoint=AZURE_OPENAI_ENDPOINT
 )
 
-async def get_embedding(text, model=TEXT_EMBEDDING_MODEL):
+def get_embedding_sync(text, model=TEXT_EMBEDDING_MODEL):
     text = text.replace("\n", " ")
-    resp = await client.embeddings.create(input=[text], model=model)
+    resp = asyncio.run(client.embeddings.create(input=[text], model=model)) 
     embedding_vector = resp.data[0].embedding
-
     return embedding_vector
 
 
-async def create_package_embeddings():
-
+def create_package_embeddings():
+    # Step 1 : Retrieve file from csv
     packages = get_file_from_azure(filename="packages.csv")
 
     logger.info("Beginning embedding process")
@@ -51,13 +51,15 @@ async def create_package_embeddings():
 
     emb_matrix_name = []
 
+    # Step 2 : Process the knowledge base to generate embeddings in batch processing 
     for i, item in enumerate(knowledge_base['package_name']):
-        emb_matrix_name.append(await get_embedding(item))
+        emb_matrix_name.append(get_embedding_sync(item))
         if i%1000==0: logger.info(f"idx : {i}")
     
     emb_matrix_name = np.array(emb_matrix_name)
     logger.info(f"Embed matrix shape: {emb_matrix_name.shape}")
 
+    # Step 3 : Save the embedding matrix to Azure
     byte_io = io.BytesIO()
     np.save(byte_io, emb_matrix_name)
     byte_io.seek(0)
