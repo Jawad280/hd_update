@@ -1,9 +1,6 @@
 from celery import Celery
 import os
 from dotenv import load_dotenv
-import ssl
-
-os.environ.clear()
 
 load_dotenv()
 
