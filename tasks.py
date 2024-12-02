@@ -15,7 +15,7 @@ def process_embeddings():
     try:
         # Create embeddings
         embeddings_response = create_package_embeddings()
-        print(embeddings_response)
+        logger.info(embeddings_response)
     except Exception as e:
         logger.error(f"Error occurred during the embedding process: {e}")
         return f"Error: {str(e)}"
