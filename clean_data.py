@@ -167,6 +167,7 @@ async def create_packages(files):
         df = pd.read_excel(f1)
         logging.info("Read single file successfully")
     
+    df = df[:100]
     df = clean(df)
 
     csv_content = df.to_csv(index=False)
