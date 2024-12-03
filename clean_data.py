@@ -34,12 +34,15 @@ new_column_names = [
     'price_to_reserve_for_this_package',
     'shop_name',
     'category',
+    'preview',
+    'selling_point',
     'brand',
     'min_max_age',
     'locations',
     'price_details',
     'package_details',
     'important_info',
+    'payment_info',
     'general_info',
     'early_signs_for_diagnosis',
     'how_to_diagnose',
@@ -54,6 +57,7 @@ new_column_names = [
     'recovery',
     'side_effects',
     'review_4_5_stars',
+    'brand_promote',
     'faq',
 ]
 
@@ -108,7 +112,7 @@ def clean(df):
     # Adding the new column "price after cash discount"
     extracted_cols['Price After Cash Discount'] = extracted_cols['P3'] - extracted_cols['Cash Discount']
 
-    df.drop(columns=['Category Tags', 'Preview 1-10', 'Selling Point', 'Meta Keywords', 'Meta Description', 'Payment Booking Info', 'Brand Option in Thai Name', 'Brand Ranking (Position)'], inplace=True)
+    df.drop(columns=['Category Tags', 'Meta Keywords', 'Meta Description', 'Brand Ranking (Position)'], inplace=True)
 
     for i, col in enumerate(extracted_cols.columns):
         df.insert(df.columns.get_loc('P3, Cash Discount, Installment/month') + 1 + i, col, extracted_cols[col])
@@ -167,13 +171,11 @@ async def create_packages(files):
         df = pd.read_excel(f1)
         logging.info("Read single file successfully")
     
+    df = df[:10]
     df = clean(df)
 
     csv_content = df.to_csv(index=False)
     logger.info("Converted df to CSV format")
-
-    # Insert payment methods
-    # Insert cash discounts
 
     upload_file_to_azure(f=csv_content, filename="packages.csv")
     return "Uploaded packages.csv"
