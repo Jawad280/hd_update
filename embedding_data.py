@@ -9,6 +9,7 @@ import asyncio
 from datetime import datetime
 from azure_storage import upload_file_to_azure, get_file_from_azure
 from tokenizer import batch_tokenize_docs
+from knowledge_base_generator import concat_sheets
 
 logging.basicConfig(
     level=logging.INFO, 
@@ -42,8 +43,13 @@ def create_package_embeddings():
     # Step 1 : Retrieve file from csv
     packages = get_file_from_azure(filename="packages.csv")
 
+    df_main = pd.read_csv(packages)
+    df_cash = pd.read_csv(get_file_from_azure('cash_discount.csv'))
+    df_feed = pd.read_csv(get_file_from_azure('product_feed.csv'))
+    df_payment = pd.read_csv(get_file_from_azure('product_payment_methods.csv'))
+
     logger.info("Beginning embedding process")
-    knowledge_base = pd.read_csv(packages)
+    knowledge_base = concat_sheets(df_main=df_main, df_cash=df_cash, df_feed=df_feed, df_payment=df_payment)
     # For testing just take 2 rows 
     # knowledge_base = knowledge_base[:2]
 
