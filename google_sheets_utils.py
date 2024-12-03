@@ -7,8 +7,6 @@ import os
 import csv
 import logging
 
-load_dotenv()
-
 logging.basicConfig(
     level=logging.INFO, 
     handlers=[
@@ -17,14 +15,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger('google_sheets_utils.py')
 
-SERVICE_ACCOUNT_FILE = get_file_from_azure('sheets_service_account.json')
-SCOPES = ['https://googleapis.com/auth/spreadsheets.readonly']
+load_dotenv()
 SPREADSHEET_ID = os.getenv("SPREADSHEET_ID")
 
-credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-service = build('sheets', 'v4', credentials=credentials)
-
 def stream_csv_to_azure(sheet_name, filename):
+    SERVICE_ACCOUNT_FILE = get_file_from_azure('sheets_service_account.json')
+    SCOPES = ['https://googleapis.com/auth/spreadsheets.readonly']
+    credentials = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    service = build('sheets', 'v4', credentials=credentials)
+
     try:
         # Fetch data from specific sheet
         logger.info(f"Begin fetching sheet : {sheet_name}....")
