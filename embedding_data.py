@@ -6,6 +6,7 @@ import pandas as pd
 import logging
 import io
 import asyncio
+from datetime import datetime
 from azure_storage import upload_file_to_azure, get_file_from_azure
 from tokenizer import batch_tokenize_docs
 
@@ -66,4 +67,4 @@ def create_package_embeddings():
 
     upload_file_to_azure(f=byte_io, filename='embed_matrix.npy')
 
-    return "Embeddings created & uploaded to Azure !"
+    return f"Embeddings created & uploaded to Azure at {datetime.now().isoformat()}"
