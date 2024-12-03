@@ -28,8 +28,6 @@ def upload_file_to_azure(f, filename:str):
         start_time = time.time()
         container_client = blob_service_client.get_container_client(CONTAINER_NAME)
         blob_client = container_client.get_blob_client(filename)
-        
-        f.seek(0)
 
         blob_client.upload_blob(f, overwrite=True)
 

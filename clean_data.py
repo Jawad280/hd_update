@@ -22,6 +22,26 @@ logging.basicConfig(
 )
 logger = logging.getLogger('clead_data.py')
 
+map_eng = {"C2HD":"You can make a booking with us to lock-in the special price, then later complete your payment when you've received your service at the clinic or hospital by contacting us again",
+       "C2HD (Flow/Mena)":"You can make a booking with us to lock-in the special price, then later complete your payment when you've received your service at the clinic or hospital by contacting us again",
+       "C2HD AND PAY AT CLINIC":"You can make a booking with us to lock-in the special price, then later complete your payment when you've received your service at the clinic or hospital by contacting us again",
+       "PAY AT CLINIC ONLY":"You can make a booking with us to lock-in the special price, then later complete your payment directly at the clinic or hospital",
+       "PAY AT HD AND CLINIC":"You can pay online through the product link or request an agent to help process your order",
+       "PAY AT HD ONLY":"You can pay online through the product link or request an agent to help process your order",
+       "PAY AT YANHEE ONLY (get cashback)":"You can make a booking with us to lock-in the special price, then later complete your payment directly at the clinic or hospital",
+       "PAY AT YANHEE ONLY (no cashback)":"You can make a booking with us to lock-in the special price, then later complete your payment directly at the clinic or hospital",
+       "SOCIAL SECURITY":"You can make a booking with us to lock-in the special price, then later complete your payment at the clinic or hospital by filing your social security claim there"}
+
+map_thai = {"C2HD":"จองก่อนจ่ายทีหลัง - นำคูปองไปยื่นในวันรับบริการ แล้วค่อยกลับมาจ่ายกับเราในราคาพิเศษ คูปองมีอายุ 30 วันนับจากวันที่ได้รับ อย่าลืมไปใช้บริการนะคะ",
+       "C2HD (Flow/Mena)":"จองก่อนจ่ายทีหลัง - นำคูปองไปยื่นในวันรับบริการ แล้วค่อยกลับมาจ่ายกับเราในราคาพิเศษ คูปองมีอายุ 30 วันนับจากวันที่ได้รับ อย่าลืมไปใช้บริการนะคะ",
+       "C2HD AND PAY AT CLINIC":"จองก่อนจ่ายทีหลัง - นำคูปองไปยื่นในวันรับบริการ แล้วค่อยกลับมาจ่ายกับเราในราคาพิเศษ คูปองมีอายุ 30 วันนับจากวันที่ได้รับ อย่าลืมไปใช้บริการนะคะ",
+       "PAY AT CLINIC ONLY":"จองกับเรา แต่จ่ายที่คลินิก/รพ. - เพียงนำคูปองไปยื่นในวันรับบริการและจ่ายเงินในราคาพิเศษ คูปองมีอายุ 30 วันนับจากวันที่ได้รับ อย่าลืมไปใช้บริการนะคะ",
+       "PAY AT HD AND CLINIC":"จองและจ่ายผ่าน HDmall - จะกดจ่ายเงินออนไลน์ที่หน้าสินค้า หรือจ่ายผ่านแอดมินก็ได้ คูปองมีอายุ 60 วันนับจากวันที่ซื้อ อย่าลืมไปใช้บริการนะคะ",
+       "PAY AT HD ONLY":"จองและจ่ายผ่าน HDmall - จะกดจ่ายเงินออนไลน์ที่หน้าสินค้า หรือจ่ายผ่านแอดมินก็ได้ คูปองมีอายุ 60 วันนับจากวันที่ซื้อ อย่าลืมไปใช้บริการนะคะ",
+       "PAY AT YANHEE ONLY (get cashback)":"จองกับเรา แต่จ่ายที่รพ. - เพียงนำคูปองไปยื่นในวันที่รับบริการ จ่ายเงิน และนำใบเสร็จมารับ Cashback กับ HDmall คูปองมีอายุ 30 วันนับจากวันที่ได้รับ อย่าลืมไปใช้บริการนะคะ",
+       "PAY AT YANHEE ONLY (no cashback)":"จองกับเรา แต่จ่ายที่รพ. - สามารถยื่นคูปองและจ่ายเงินในวันที่รับบริการได้เลย คูปองมีอายุ 30 วันนับจากวันที่ได้รับ อย่าลืมไปใช้บริการนะคะ",
+       "SOCIAL SECURITY":"จองกับเรา และทำเรื่องเบิกประกันสังคมที่คลินิก/รพ. ในวันที่รับบริการ คูปองมีอายุ 30 วันนับจากวันที่ได้รับ อย่าลืมไปใช้บริการนะคะ"}
+
 new_column_names = [
     'package_name',
     'package_picture',
@@ -149,12 +169,84 @@ def clean(df):
 
     return df
 
+def merge_dfs(df_main, df_cash, df_feed, df_payment):
+    # Find unmatched URLs using set operations
+    cash_urls = set(df_cash['SKU URL'])
+    main_urls = set(df_main['url'])
+
+    # URLs in df_cash that aren't in df_main
+    unmatched_cash = cash_urls - main_urls
+
+    # URLs in df_main that aren't in df_cash
+    unmatched_main = main_urls - cash_urls
+
+    # Still do the assignments
+    for i in range(len(df_cash)):
+        url = df_cash.loc[i, 'SKU URL']
+        df_main.loc[df_main['url'] == url, 'cash_discount'] = df_cash.loc[i,'Cash Discount']
+
+    for i in range(len(df_main)):
+        df_main.loc[i, 'price_after_cash_discount'] = df_main.loc[i,'price'] - df_main.loc[i,'cash_discount']
+
+    df_main['original_price'] = df_main['price'].astype(str)
+
+    for i in range(len(df_main)):
+        query = df_main.loc[i,'package_name']
+        try:
+            price = df_feed.loc[df_feed['title'] == query]['price'].values[0]
+            df_main.loc[i, 'original_price'] = str(price)
+        except IndexError:
+            price = None
+
+
+    df_main['payment_method_eng'] = ''
+    df_main['payment_method_thai'] = ''
+
+    count = 0
+    for i in range(len(df_main)):
+        url = df_main.loc[i, 'url']
+        try:
+            # First check if URL exists in df_payment
+            matching_rows = df_payment[df_payment['Package URL']==url]
+            if matching_rows.empty:
+                #print(f"Row {i}: No matching URL found: {url}")
+                count+=1
+                continue
+
+            # Try to get the payment method
+            try:
+                key = matching_rows['Payment Method'].values[0]
+            except IndexError:
+                #print(f"Row {i}: Payment Method column is empty for URL: {url}")
+                continue
+
+            # Try to map the payment method
+            if key not in map_thai:
+                #print(f"Row {i}: Payment key '{key}' not found in map_thai dictionary")
+                continue
+            if key not in map_eng:
+                #print(f"Row {i}: Payment key '{key}' not found in map_eng dictionary")
+                continue
+
+            # If all checks pass, update the dataframe
+            df_main.loc[i, 'payment_method_thai'] = map_thai[key]
+            df_main.loc[i,'payment_method_eng'] = map_eng[key]
+
+        except Exception as e:
+            print(f"Row {i}: Unexpected error: {str(e)}")
+            # Optionally print more debug info
+            print(f"URL: {url}")
+            print(f"Matching rows in df_payment: {len(matching_rows) if 'matching_rows' in locals() else 'not checked yet'}")
+            continue
+
+    return df_main
+
 async def create_packages(files):
     if not files or len(files) == 0:
         raise ValueError("No files provided.")
     
     f1, f2 = None, None
-    df = None
+    df_main = None
 
     if len(files) > 1:
         f1 = await files[0].read()
@@ -165,16 +257,20 @@ async def create_packages(files):
     if f2:
         df_part_1 = pd.read_excel(f1)
         df_part_2 = pd.read_excel(f2)
-        df = pd.concat([df_part_1, df_part_2])
+        df_main = pd.concat([df_part_1, df_part_2])
         logging.info("Merged xlsx files")
     else:
-        df = pd.read_excel(f1)
+        df_main = pd.read_excel(f1)
         logging.info("Read single file successfully")
     
-    df = df[:10]
-    df = clean(df)
+    df_main = clean(df_main)
+    df_cash = pd.read_csv(get_file_from_azure('cash_discount.csv'))
+    df_feed = pd.read_csv(get_file_from_azure('product_feed.csv'))
+    df_payment = pd.read_csv(get_file_from_azure('product_payment_methods.csv'))
+    
+    df_main = merge_dfs(df_main=df_main, df_cash=df_cash, df_feed=df_feed, df_payment=df_payment)
 
-    csv_content = df.to_csv(index=False)
+    csv_content = df_main.to_csv(index=False)
     logger.info("Converted df to CSV format")
 
     upload_file_to_azure(f=csv_content, filename="packages.csv")
